@@ -5,37 +5,81 @@ READER = readline.createInterface({
   output: process.stdout
 });
 
-// function HumanPlayer(tictactoe) {
-//   this.tictactoe = tictactoe;
-//
-//   this.get_input = function() {
-//     READER.question("Where would you like to move? '0 1' (row, col)", function(stringInput) {
-//       var re = /^([012]) ([012])$/;
-//       reArray = re.exec(stringInput);
-//       if (re.test(stringInput) === false) {
-//         that.loop();
-//
-//       } else {
-//         move_array = [parseInt(reArray[1]), parseInt(reArray[2])];
-//         that.move(move_array);
-//       }
-//     });
-//   };
-//
-//
-// }
-//
-// function ComputerPlayer(tictactoe) {
-//   this.tictactoe = tictactoe;
-//
-//   this.get_input = function() {
-//
-//   };
-// }
+function HumanPlayer(tictactoe) {
+  this.tictactoe = tictactoe;
+}
+
+HumanPlayer.prototype.get_input = function() {
+  var that = this;
+
+  READER.question("Where would you like to move? '0 1' (row, col)", function(stringInput) {
+    var re = /^([012]) ([012])$/;
+    reArray = re.exec(stringInput);
+    if (re.test(stringInput) === false) {
+      that.tictactoe.loop();
+
+    } else {
+      move_array = [parseInt(reArray[1]), parseInt(reArray[2])];
+      that.tictactoe.move(move_array);
+    }
+  });
+};
+
+function ComputerPlayer(tictactoe) {
+  this.tictactoe = tictactoe;
+}
+
+ComputerPlayer.prototype.get_input = function() {
+  return this.getWinningMoveOrRandomOpenMove();
+};
+
+// Chooses a move for the AI player.
+ComputerPlayer.prototype.getWinningMoveOrRandomOpenMove = function() {
+  openMoves = this.getOpenMoves();
+
+  for(var i = 0; i < openMoves.length; i++) {
+    if (this.tictactoe.turn === 0) {
+      move = "X";
+    } else {
+      move = "O";
+    }
+    move_array = openMoves[i];
+    this.tictactoe.board[move_array[0]][move_array[1]] = move;
+
+    if (this.tictactoe.winState()) {
+      this.tictactoe.board[move_array[0]][move_array[1]] = "_";
+      return openMoves[i];
+    } else {
+      this.tictactoe.board[move_array[0]][move_array[1]] = "_";
+    }
+  }
+
+  return this.getRandomOpenMove(openMoves);
+};
+
+ComputerPlayer.prototype.getRandomOpenMove = function(openMoves) {
+  index = Math.floor((Math.random() * openMoves.length));
+  return openMoves[index];
+};
+
+ComputerPlayer.prototype.getOpenMoves = function() {
+  openMoves = [];
+  for (var i = 0; i < this.tictactoe.board.length; i++) {
+    for (var j = 0; j < this.tictactoe.board[i].length; j++) {
+      if (this.tictactoe.board[i][j] === "_") {
+        openMoves.push([i, j]);
+      }
+    }
+  }
+
+  return openMoves;
+};
 
 function TicTacToe(num_humans) {
   // pass two players?
+  this.playerObjects = [];
   this.players = this.getPlayers(num_humans);
+
   this.turn = 0;
 
   // board as 3 strings?
@@ -49,12 +93,20 @@ TicTacToe.prototype.getPlayers = function(num_humans) {
   // 1 is human, 0 is computer
   switch(num_humans) {
   case 0:
+    this.playerObjects.push(new ComputerPlayer(this));
+    this.playerObjects.push(new ComputerPlayer(this));
     return [0, 0];
   case -1:
+    this.playerObjects.push(new HumanPlayer(this));
+    this.playerObjects.push(new ComputerPlayer(this));
     return [0, 1];
   case 1:
+    this.playerObjects.push(new ComputerPlayer(this));
+    this.playerObjects.push(new HumanPlayer(this));
     return [1, 0];
   case 2:
+    this.playerObjects.push(new HumanPlayer(this));
+    this.playerObjects.push(new HumanPlayer(this));
     return [1, 1];
   default:
     console.log("Call play with number of humans");
@@ -181,64 +233,12 @@ TicTacToe.prototype.loop = function() {
     READER.close();
 
   } else if (that.players[that.turn] === 1) {
-    READER.question("Where would you like to move? '0 1' (row, col)", function(stringInput) {
-      var re = /^([012]) ([012])$/;
-      reArray = re.exec(stringInput);
-      if (re.test(stringInput) === false) {
-        that.loop();
-
-      } else {
-        move_array = [parseInt(reArray[1]), parseInt(reArray[2])];
-        that.move(move_array);
-      }
-    });
+    that.playerObjects[that.turn].get_input();
 
   } else if (that.players[that.turn] === 0) {
-    move_array = that.getWinningMoveOrRandomOpenMove();
+    move_array = that.playerObjects[that.turn].get_input();
     that.move(move_array);
   }
-};
-
-// Chooses a move for the AI player.
-TicTacToe.prototype.getWinningMoveOrRandomOpenMove = function() {
-  openMoves = this.getOpenMoves();
-
-  for(var i = 0; i < openMoves.length; i++) {
-    if (this.turn === 0) {
-      move = "X";
-    } else {
-      move = "O";
-    }
-    move_array = openMoves[i];
-    this.board[move_array[0]][move_array[1]] = move;
-
-    if (this.winState()) {
-      this.board[move_array[0]][move_array[1]] = "_";
-      return openMoves[i];
-    } else {
-      this.board[move_array[0]][move_array[1]] = "_";
-    }
-  }
-
-  return this.getRandomOpenMove(openMoves);
-};
-
-TicTacToe.prototype.getRandomOpenMove = function(openMoves) {
-  index = Math.floor((Math.random() * openMoves.length));
-  return openMoves[index];
-};
-
-TicTacToe.prototype.getOpenMoves = function() {
-  openMoves = [];
-  for (var i = 0; i < this.board.length; i++) {
-    for (var j = 0; j < this.board[i].length; j++) {
-      if (this.board[i][j] === "_") {
-        openMoves.push([i, j]);
-      }
-    }
-  }
-
-  return openMoves;
 };
 
 TicTacToe.prototype.move = function(move_array) {
@@ -258,5 +258,5 @@ TicTacToe.prototype.move = function(move_array) {
   }
 };
 
-var game = new TicTacToe(0);
+var game = new TicTacToe(2);
 game.play();
