@@ -148,12 +148,40 @@ TicTacToe.prototype.loop = function() {
       }
     });
   } else if (that.players[that.turn] === 0) {
-    move_array = that.getRandomOpenMove();
+    move_array = that.getWinningMoveOrRandomOpenMove();
     that.move(move_array);
   }
 };
 
-TicTacToe.prototype.getRandomOpenMove = function(move_array) {
+TicTacToe.prototype.getWinningMoveOrRandomOpenMove = function() {
+  openMoves = this.getOpenMoves()
+
+  for(var i = 0; i < openMoves.length; i++) {
+    if (this.turn === 0) {
+      move = "X";
+    } else {
+      move = "O";
+    }
+    move_array = openMoves[i]
+    this.board[move_array[0]][move_array[1]] = move;
+
+    if (this.winState()) {
+      this.board[move_array[0]][move_array[1]] = "_";
+      return openMoves[i]
+    } else {
+      this.board[move_array[0]][move_array[1]] = "_";
+    }
+  }
+
+  return this.getRandomOpenMove(openMoves);
+}
+
+TicTacToe.prototype.getRandomOpenMove = function(openMoves) {
+  index = Math.floor((Math.random() * openMoves.length));
+  return openMoves[index];
+}
+
+TicTacToe.prototype.getOpenMoves = function() {
   openMoves = [];
   for (var i = 0; i < this.board.length; i++) {
     for (var j = 0; j < this.board[i].length; j++) {
@@ -163,8 +191,7 @@ TicTacToe.prototype.getRandomOpenMove = function(move_array) {
     }
   }
 
-  index = Math.floor((Math.random() * openMoves.length));
-  return openMoves[index];
+  return openMoves;
 }
 
 TicTacToe.prototype.move = function(move_array) {
@@ -187,28 +214,3 @@ TicTacToe.prototype.move = function(move_array) {
 
 var game = new TicTacToe(0);
 game.play();
-
-// function ask(question, format, callback) {
-//  var stdin = process.stdin, stdout = process.stdout;
-//
-//  stdin.resume();
-//  stdout.write(question + ": ");
-//
-//  stdin.once('data', function(data) {
-//    data = data.toString().trim();
-//
-//    if (format.test(data)) {
-//      callback(data);
-//    } else {
-//      stdout.write("It should match: "+ format +"\n");
-//      ask(question, format, callback);
-//    }
-//  });
-// }
-//
-// input = ask("Name", /.+/, function(name) {
-//   return name;
-//
-//     process.exit();
-//   });
-// });
