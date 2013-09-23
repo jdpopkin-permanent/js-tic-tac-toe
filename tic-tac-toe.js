@@ -5,24 +5,53 @@ READER = readline.createInterface({
   output: process.stdout
 });
 
-// function HumanPlayer() {
-//    this.get_input = function()
+// function HumanPlayer(tictactoe) {
+//   this.tictactoe = tictactoe;
+//
+//   this.get_input = function() {
+//     READER.question("Where would you like to move? '0 1' (row, col)", function(stringInput) {
+//       var re = /^([012]) ([012])$/;
+//       reArray = re.exec(stringInput);
+//       if (re.test(stringInput) === false) {
+//         that.loop();
+//
+//       } else {
+//         move_array = [parseInt(reArray[1]), parseInt(reArray[2])];
+//         that.move(move_array);
+//       }
+//     });
+//   };
+//
+//
+// }
+//
+// function ComputerPlayer(tictactoe) {
+//   this.tictactoe = tictactoe;
+//
+//   this.get_input = function() {
+//
+//   };
 // }
 
 function TicTacToe(num_humans) {
   // pass two players?
-  this.players = this.getPlayers(num_humans)
-  this.turn = 0
+  this.players = this.getPlayers(num_humans);
+  this.turn = 0;
 
   // board as 3 strings?
   this.board = [["_", "_", "_"], ["_", "_", "_"], ["_", "_", "_"]];
 }
 
+// Starts game with given number of human players. when num_humans is 1,
+// the human player is X. When num_humans is -1, the computer player is X,
+// and the human is O.
 TicTacToe.prototype.getPlayers = function(num_humans) {
   // 1 is human, 0 is computer
   switch(num_humans) {
   case 0:
     return [0, 0];
+  case -1:
+    return [0, 1];
   case 1:
     return [1, 0];
   case 2:
@@ -30,8 +59,9 @@ TicTacToe.prototype.getPlayers = function(num_humans) {
   default:
     console.log("Call play with number of humans");
   }
-}
+};
 
+// Updates the player to move next.
 TicTacToe.prototype.changeTurn = function() {
   // make 0 1;
   if (this.turn === 0) {
@@ -40,7 +70,7 @@ TicTacToe.prototype.changeTurn = function() {
     // make 1 0;
     this.turn = 0;
   }
-}
+};
 
 TicTacToe.prototype.gameOver = function() {
   // board full or win state
@@ -48,7 +78,7 @@ TicTacToe.prototype.gameOver = function() {
     return true;
   }
   return false;
-}
+};
 
 TicTacToe.prototype.draw = function() {
   if (this.winState()) {
@@ -57,8 +87,7 @@ TicTacToe.prototype.draw = function() {
     return false;
   }
   return true;
-
-}
+};
 
 TicTacToe.prototype.hasOpenSquares = function() {
   for (var i = 0; i < this.board.length; i++) {
@@ -70,9 +99,10 @@ TicTacToe.prototype.hasOpenSquares = function() {
   }
 
   return false;
-}
+};
 
-TicTacToe.prototype.winState = function() {
+// Checks rows and columsn for win state.
+TicTacToe.prototype.checkRowsAndCols = function() {
   // column
   for (var i = 0; i < this.board.length; i++) {
     if (this.board[0][i] === this.board[1][i] && this.board[1][i] === this.board[2][i]) {
@@ -90,8 +120,10 @@ TicTacToe.prototype.winState = function() {
       }
     }
   }
+};
 
-  // diagonal
+// Checks diagonals for win state.
+TicTacToe.prototype.checkDiags = function() {
   if (this.board[0][0] === this.board[1][1] && this.board[1][1] === this.board[2][2]) {
     if (this.board[0][0] != "_") {
       return true;
@@ -102,17 +134,26 @@ TicTacToe.prototype.winState = function() {
       return true;
     }
   }
+};
 
-  return false
-}
+TicTacToe.prototype.winState = function() {
+  if (this.checkRowsAndCols()) {
+    return true;
+  }
+
+  // diagonal
+  if (this.checkDiags()) {
+    return true;
+  }
+
+  return false;
+};
 
 TicTacToe.prototype.play = function() {
   this.loop();
-}
+};
 
 TicTacToe.prototype.render = function() {
-
-
   console.log("  _____");
 
   for (var i = 0; i < this.board.length; i++) {
@@ -124,11 +165,13 @@ TicTacToe.prototype.render = function() {
   }
 
   console.log("  0 1 2");
-}
+};
 
+// Main game "loop" - accepts input and makes move.
 TicTacToe.prototype.loop = function() {
-  that = this
+  that = this;
   that.render();
+
   if (that.gameOver()){
     if (that.winState()) {
       console.log("You Win!");
@@ -136,25 +179,29 @@ TicTacToe.prototype.loop = function() {
       console.log("Draw!");
     }
     READER.close();
+
   } else if (that.players[that.turn] === 1) {
     READER.question("Where would you like to move? '0 1' (row, col)", function(stringInput) {
       var re = /^([012]) ([012])$/;
       reArray = re.exec(stringInput);
       if (re.test(stringInput) === false) {
         that.loop();
+
       } else {
         move_array = [parseInt(reArray[1]), parseInt(reArray[2])];
         that.move(move_array);
       }
     });
+
   } else if (that.players[that.turn] === 0) {
     move_array = that.getWinningMoveOrRandomOpenMove();
     that.move(move_array);
   }
 };
 
+// Chooses a move for the AI player.
 TicTacToe.prototype.getWinningMoveOrRandomOpenMove = function() {
-  openMoves = this.getOpenMoves()
+  openMoves = this.getOpenMoves();
 
   for(var i = 0; i < openMoves.length; i++) {
     if (this.turn === 0) {
@@ -162,24 +209,24 @@ TicTacToe.prototype.getWinningMoveOrRandomOpenMove = function() {
     } else {
       move = "O";
     }
-    move_array = openMoves[i]
+    move_array = openMoves[i];
     this.board[move_array[0]][move_array[1]] = move;
 
     if (this.winState()) {
       this.board[move_array[0]][move_array[1]] = "_";
-      return openMoves[i]
+      return openMoves[i];
     } else {
       this.board[move_array[0]][move_array[1]] = "_";
     }
   }
 
   return this.getRandomOpenMove(openMoves);
-}
+};
 
 TicTacToe.prototype.getRandomOpenMove = function(openMoves) {
   index = Math.floor((Math.random() * openMoves.length));
   return openMoves[index];
-}
+};
 
 TicTacToe.prototype.getOpenMoves = function() {
   openMoves = [];
@@ -192,11 +239,10 @@ TicTacToe.prototype.getOpenMoves = function() {
   }
 
   return openMoves;
-}
+};
 
 TicTacToe.prototype.move = function(move_array) {
   // check to see if square is open
-
   if (this.board[move_array[0]][move_array[1]] !== "_") {
     this.loop();
   } else {
@@ -206,11 +252,11 @@ TicTacToe.prototype.move = function(move_array) {
       move = "O";
     }
 
-    this.board[move_array[0]][move_array[1]] = move
+    this.board[move_array[0]][move_array[1]] = move;
     this.changeTurn();
     this.loop();
   }
-}
+};
 
 var game = new TicTacToe(0);
 game.play();
